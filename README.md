@@ -1,2 +1,2 @@
-# CodemaoWorkshopAutoManager
-编程猫工作室自动管理程序
+# 编程猫工作室自动管理程序
+是星阁的管理程序，供参考
