@@ -78,7 +78,8 @@ while True:
     aaa = None
     
     now = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-    print(i, ws.updateDetail(WSID, description, name, head))
+#     print(i, ws.updateDetail(WSID, description, name, head))
+#   官方已禁止自动置顶功能
     text = ws.getWillJoin(WSID)[1]
     print(i, text)
 
