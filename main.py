@@ -1,5 +1,7 @@
-import requests,random
-import datetime,time
+# -*- coding: utf-8 -*-
+import traceback, json
+import requests, random
+import datetime, time
 from allapi import *
 
 '''
@@ -17,16 +19,18 @@ from allapi import *
 为了防止有人恶意退出重进进行骚扰，每个人每小时只会通过一次。
 '''
 COOKIE = "cookie"
-EM = ["ヾ(≧▽≦*)o",'(～￣▽￣)～','<(￣︶￣)↗','O(∩_∩)O','(*^▽^*)','(≧∇≦)','o(*￣︶￣*)o']
-OWNER_ID = [] #将用户id填入，中间以“,”（英文逗号）分隔，这些用户可以使用“删除室员投稿”命令
-LIMIT = 10 #每次执行时处理LIMIT（5<=LIMIT<=20）个新消息
-AUDITLIKE = 1 #修改后面的数值可以设置几赞及以上可以自动通过
-description = "工作室简介"
-WHITE_ID = [10042242] #非工作室的也能签到的白名单
-TOP_NUM = 1; #工作室评论区置顶的消息数（如果签到失效检查一下这个）
-URID = 114514 #工作室编号
-name = "" #工作室名
-head = "" #工作室头像url（可抓包获取头像的url）
+EM = ["ヾ(≧▽≦*)o", '(～￣▽￣)～', '<(￣︶￣)↗', 'O(∩_∩)O', '(*^▽^*)', '(≧∇≦)', 'o(*￣︶￣*)o']
+OWNER_ID = []  # 将用户id填入，中间以“,”（英文逗号）分隔，这些用户可以使用“删除室员投稿”命令
+LIMIT = 10  # 每次执行时处理LIMIT（5<=LIMIT<=20）个新消息
+AUDITLIKE = 1  # 修改后面的数值可以设置几赞及以上可以自动通过
+WHITE_ID = [10042242]  # 非工作室的也能签到的白名单
+TOP_NUM = 1  # 工作室评论区置顶的消息数（如果签到失效检查一下这个）
+URID = 8129  # 工作室编号
+# 下面三个不需要填
+# description = "工作室简介"
+# name = ""  # 工作室名
+# head = ""  # 工作室头像url（可抓包获取头像的url）
+
 
 def find(n, l):
     for i in l:
@@ -59,11 +63,9 @@ ws = WorkShop(header)
 
 WSID = ws.getwsid(URID)
 
-
-
 i = 0
 
-#记录的是黑名单id（如果有人捣乱可以把它的id加入（用sublime））
+# 记录的是黑名单id（如果有人捣乱可以把它的id加入（用sublime））
 with open("blackId.json", "r", encoding="utf-8") as f:
     blackId = json.load(f)
 
@@ -72,19 +74,16 @@ with open("blackId.json", "r", encoding="utf-8") as f:
 
 print(blackId)
 
-
 while True:
     d = datetime.datetime.now()
     aaa = None
-    
+
     now = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-#     print(i, ws.updateDetail(WSID, description, name, head))
-#   官方已禁止自动置顶功能
+    # print(i, ws.updateDetail(WSID, description, name, head))
     text = ws.getWillJoin(WSID)[1]
     print(i, text)
 
-
-#自动同意申请：
+    # 自动同意申请：
     if text["items"] != []:
         id = text["items"][0]["user_id"]
         nickname = text["items"][0]["nickname"]
@@ -110,16 +109,16 @@ while True:
                     ws.sendReview(URID, text)
                     ws.audit(WSID, id, True)
                     aaa.append([nickname, {"id": id, "like": like}, timeCode, {
-                               "year": y, "month": m, "day": dy, "hour": h, "minute": mi, "second": s}, text, True])
+                        "year": y, "month": m, "day": dy, "hour": h, "minute": mi, "second": s}, text, True])
                     time.sleep(3)
                 else:
                     aaa.append([nickname, {"id": id, "like": like}, timeCode, {
-                               "year": y, "month": m, "day": dy, "hour": h, "minute": mi, "second": s}, "进入过于频繁", False])
+                        "year": y, "month": m, "day": dy, "hour": h, "minute": mi, "second": s}, "进入过于频繁", False])
                     ws.audit(WSID, id, False)
 
             with open("log.json", "w", encoding="utf-8") as f:
                 f.write(json.dumps(aaa, sort_keys=False,
-                        indent=4, ensure_ascii=False))
+                                   indent=4, ensure_ascii=False))
 
         else:
             ws.audit(WSID, id, False)
@@ -127,28 +126,29 @@ while True:
                 aaa = json.load(f)
                 if findornot and like < AUDITLIKE:
                     aaa.append([nickname, {"id": id, "like": like}, timeCode, {
-                               "year": y, "month": m, "day": dy, "hour": h, "minute": mi, "second": s}, f"点赞小于{AUDITLIKE}（{like}）且 ", False])
+                        "year": y, "month": m, "day": dy, "hour": h, "minute": mi, "second": s},
+                                f"点赞小于{AUDITLIKE}（{like}）且 ", False])
                 elif like < AUDITLIKE:
                     aaa.append([nickname, {"id": id, "like": like}, "-1", {"year": y, "month": m, "day": dy,
-                               "hour": h, "minute": mi, "second": s}, f"点赞小于{AUDITLIKE}（{like}）", False])
+                                                                           "hour": h, "minute": mi, "second": s},
+                                f"点赞小于{AUDITLIKE}（{like}）", False])
                 elif findornot:
                     aaa.append([nickname, {"id": id, "like": like}, timeCode, {
-                               "year": y, "month": m, "day": dy, "hour": h, "minute": mi, "second": s}, f"黑名单", False])
+                        "year": y, "month": m, "day": dy, "hour": h, "minute": mi, "second": s}, f"黑名单", False])
 
             with open("log.json", "w", encoding="utf-8") as f:
                 f.write(json.dumps(aaa, sort_keys=False,
-                        indent=4, ensure_ascii=False))
+                                   indent=4, ensure_ascii=False))
 
-
-    if i %1000 == 0:
+    if i % 1000 == 0:
         nu = LIMIT;
     else:
         nu = 1;
-    for q in range(TOP_NUM,TOP_NUM+nu):
+    for q in range(TOP_NUM, TOP_NUM + nu):
         if nu == 1:
-            rev = ws.getReviews(URID,limit=5)[1]
+            rev = ws.getReviews(URID, limit=5)[1]
         else:
-            rev = ws.getReviews(URID,limit=TOP_NUM+nu)[1]
+            rev = ws.getReviews(URID, limit=TOP_NUM + nu)[1]
 
         # print(rev)
         # rev = rev[q]
@@ -169,13 +169,13 @@ while True:
         mi = d.minute
         s = d.second
         tk = f"{y},{m},{dy}"
-        adds = "（自动管理程序来自水翎稞）" #小广告（（（
+        adds = "（自动管理程序来自水翎稞）"  # 小广告（（（
 
         # print(text)
 
         can = True
         if i % 2 == 0 and islike == False:
-            if text == '签到' and (wsnm == name or find(intUserid,WHITE_ID)):
+            if text == '签到' and (wsnm == name or find(intUserid, WHITE_ID)):
                 with open("mark.json", "r", encoding="utf-8") as f:
                     ts = json.load(f)
                     ks = ts.keys()
@@ -201,7 +201,7 @@ while True:
                         ts[userid] = {"timeCode": tk, "name": nkname, "mark": 10}
                 with open("mark.json", "w", encoding="utf-8") as f:
                     f.write(json.dumps(ts, sort_keys=False,
-                            indent=4, ensure_ascii=False))
+                                       indent=4, ensure_ascii=False))
 
                 if can:
                     print(ws.replyReview(
@@ -209,59 +209,55 @@ while True:
                     print(ws.likeReview(messageid))
             elif text[0:12] == "删除我的投稿，作品id：":
                 try:
-                    num = int(text[12:-1]+text[-1])
+                    num = int(text[12:-1] + text[-1])
                     print(num)
                     r = ws.getAllWorks(URID);
                     for z in r:
                         if z["workId"] == num:
                             if z["creatorId"] == userid:
-                                ws.removeWork(WSID,num)
-                                print(ws.replyReview("已删除。",URID,messageid))
+                                ws.removeWork(WSID, num)
+                                print(ws.replyReview("已删除。", URID, messageid))
                                 break;
                             else:
-                                print(ws.replyReview("这不是你的作品",URID,messageid))
+                                print(ws.replyReview("这不是你的作品", URID, messageid))
                                 break;
                     else:
-                        print(ws.replyReview("没找到诶",URID,messageid))
+                        print(ws.replyReview("没找到诶", URID, messageid))
                     print(ws.likeReview(messageid));
                 except:
-                    print(ws.replyReview(f"删除作品格式错误",URID,messageid))
+                    print(ws.replyReview(f"删除作品格式错误", URID, messageid))
                     print(ws.likeReview(messageid));
                     print("error")
-            elif text[0:12] == "删除室员投稿，室员id：" and find(intUserid,OWNER_ID):
+            elif text[0:12] == "删除室员投稿，室员id：" and find(intUserid, OWNER_ID):
                 try:
-                    num = int(text[12:-1]+text[-1])
+                    num = int(text[12:-1] + text[-1])
                     print(num)
                     r = ws.getAllWorks(URID);
                     deleteId = []
                     for z in r:
                         if int(z["creatorId"]) == num:
-                            print(ws.removeWork(WSID,z["workId"]))
+                            print(ws.removeWork(WSID, z["workId"]))
                             # print(ws.replyReview("删除",URID,messageid))
-                            print("删除作品："+str(z["workId"]))
+                            print("删除作品：" + str(z["workId"]))
                             deleteId.append(z["workId"])
                     if deleteId == []:
-                        print(ws.replyReview("没找到诶",URID,messageid))
+                        print(ws.replyReview("没找到诶", URID, messageid))
                     else:
-                        print(ws.replyReview(f"删除作品：{str(deleteId)}",URID,messageid))
+                        print(ws.replyReview(f"删除作品：{str(deleteId)}", URID, messageid))
                     print(ws.likeReview(messageid));
                 except Exception as e:
                     traceback.print_exc()
                     # print(e)
-                    print(ws.replyReview(f"删除作品格式错误",URID,messageid))
+                    print(ws.replyReview(f"删除作品格式错误", URID, messageid))
                     print(ws.likeReview(messageid));
                     # print("exception")
             elif text[0:2] == "串门":
-                print(ws.replyReview(f"欢迎！{random.choice(EM)}",URID,messageid))
+                print(ws.replyReview(f"欢迎！{random.choice(EM)}", URID, messageid))
                 print(ws.likeReview(messageid));
 
     # except Exception as e:
     #     print(e)
     #     print("fail")
     #     print("出错了")
-
-    #没必要太快，于是调成了3s一次
-    #为了测试的效果，我调成了1s，如果我傻了忘记改为3s，记得改回去（下面的1改成3就好）
-    #太快浪费资源，建议5s一次
     i += 1
     time.sleep(5)
